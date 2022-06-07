@@ -1,24 +1,42 @@
 import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, PermissionsAndroid, Platform, StyleSheet, Text, View } from 'react-native';
 import Contacts from 'react-native-contacts';
 
 export default function App() {
-  const [contacts, setContacts] = useState();
+  const [contacts, setContacts] = useState([]);
   useEffect(() => {
-    try {
+    if (Platform.OS === 'android') {
+      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_CONTACTS, {
+        title: 'Contacts',
+        message: 'This app would like to view your contacts.',
+        buttonPositive: 'Please accept bare mortal',
+      }).then(
+        Contacts.getAll()
+          .then((contacts) => {
+            setContacts(contacts);
+          })
+          .catch((e) => {
+            console.log(e);
+          })
+      );
+    } else {
       Contacts.getAll().then((contacts) => {
         setContacts(contacts);
+      }).catch((e) => {
+        console.log(e);
       });
-    } catch (error) {
-      console.log(error);
     }
   });
 
   return (
-  <View style={styles.container}>
-      {contacts.map(item=><Text key={item.recordID}>{`${item.familyName} ${item.givenName}`}</Text>)}
-  </View>
-  )
+    <View style={styles.container}>
+      {contacts.map((item) => (
+        <Text
+          key={item.recordID}
+        >{`${item.familyName} ${item.givenName}`}</Text>
+      ))}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
